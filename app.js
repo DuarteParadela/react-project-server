@@ -1,71 +1,90 @@
 require("dotenv").config();
 require("./config/dbConnection");
-
 const express = require("express");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
-const session = require("express-session");
-const MongoStore = require("connect-mongo")(session);
-const mongoose = require("mongoose");
-const app = express();
 const cors = require("cors");
+const session = require("express-session");
+const mongoose = require("mongoose");
+const MongoStore = require("connect-mongo")(session);
+const indexRouter = require("./routes/index");
+const _DEV_MODE = false;
+const app = express();
 
-/**
- * Middlewares
- */
-const corsOptions = { origin: process.env.FRONTEND_URL, credentials: true };
-
-app.use(cors(corsOptions));
-app.use(logger("dev")); // This logs HTTP reponses in the console.
-app.use(express.json()); // Access data sent as json @req.body
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "public")));
+/*  Cross Origin Ressource Sharing
+    https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+*/
 
 app.use(
-  session({
-    store: new MongoStore({ mongooseConnection: mongoose.connection }), // Persist session in database.
-    secret: process.env.SESSION_SECRET,
-    resave: true,
-    saveUninitialized: true,
+  cors({
+    origin: process.env.FRONTEND_URL, // white list of clients, allowing specific domains to communicate with the api.
+    credentials: true, // Allow client to send cookies.
   })
 );
 
-// Test to see if user is logged In before getting into any router.
-app.use(function (req, res, next) {
-  console.log("User in session =>", req.session.currentUser);
-  next();
-});
+app.use(logger("dev")); // Show us the the request methods (get,post...) status and url in the console.
+app.use(express.json()); // Allows us to access data sent as json through request.body
+app.use(express.urlencoded({ extended: false })); // Alows us to access data sent as urlencoded through request.body
+app.use(cookieParser()); // Allows us to access cookies through request.cookies
+app.use(express.static(path.join(__dirname, "public"))); // Define public folder to serve static assets, imgs, etc..
 
-/**
- * Routes
- */
+app.use(
+  session({
+    store: new MongoStore({ mongooseConnection: mongoose.connection }), // Persist the session in the Database
+    saveUninitialized: true,
+    resave: true,
+    secret: process.env.SESSION_SECRET,
+  })
+);
 
-const authRouter = require("./routes/auth");
+if (_DEV_MODE) {
+  const User = require("./models/User");
 
-app.use("/api/auth", authRouter);
+  app.use((req, res, next) => {
+    User.findOne({}) // Get a user from the DB (doesnt matter which)
+      .then((userDocument) => {
+        req.session.currentUser = userDocument._id; // Set that user as the loggedin user by putting him in the session.
+      })
+      .catch((error) => {
+        console.log(error);
+      })
+      .finally(() => {
+        // .finally() will be called no matter if the promise failed or succeeded so we can safely call our next function here.
+        next();
+      });
+  });
+}
 
-// 404 Middleware
+/*  Routers ! */
+
+app.use("/api/auth", require("./routes/auth"));
+app.use("/api/users", require("./routes/users"));
+app.use("/api/demands", require("./routes/demands"));
+app.use("/api/homes", require("./routes/homes"));
+
+// Middleware that handles a ressource that wasn't found.
 app.use((req, res, next) => {
-  const error = new Error("Ressource not found.");
-  error.status = 404;
-  next(err);
+  res.status(404).json({
+    message: `The ressource you're trying to request doesn't exist. Method: ${req.method} path: ${req.originalUrl}`,
+  });
 });
 
-// Error handler middleware
-// If you pass an argument to your next function in any of your routes or middlewares
-// You will end up in this middleware
-// next("toto") makes you end up here
-app.use((err, req, res, next) => {
-  if (process.env.NODE_ENV !== "production") {
-    console.error(err);
-  }
-  console.log("An error occured");
-  res.status(err.status || 500);
-  if (!res.headersSent) {
-    res.json(err);
-  }
+if (process.env.NODE_ENV === "production") {
+  app.use("*", (req, res, next) => {
+    // If no routes match, send them the React HTML.
+    res.sendFile(__dirname + "/public/index.html");
+  });
+}
+
+// Middleware that handles errors, as soon as you pass some data to your next() function
+// eg: next("toto"). You will end up in this middleware function.
+
+app.use((error, req, res, next) => {
+  console.log(error);
+  error.status = error.status || 500;
+  res.json(error);
 });
 
+/*  App is exported and then used in ./bin/www where the http server is initialized. */
 module.exports = app;

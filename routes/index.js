@@ -6,12 +6,4 @@ router.get("/", function (req, res, next) {
   res.render("index", { title: "Express" });
 });
 
-router.get("/dashboard", function (req, res, next) {
-  res.send("AdminDashboard");
-});
-
-router.get("/profile", function (req, res, next) {
-  res.send("Profile");
-});
-
 module.exports = router;
