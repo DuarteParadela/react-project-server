@@ -3,9 +3,10 @@ const router = express.Router();
 const Demand = require("../models/Demand");
 const upload = require("../config/cloudinary");
 const requireAuth = require("../middlewares/requireAuth");
+const protectAdminRoute = require("../middlewares/protectAdminRoute");
 
 // To get all demands
-router.get("/", (req, res, next) => {
+router.get("/", requireAuth, (req, res, next) => {
   Demand.find()
     .populate("id_user")
     .then((request) => {
@@ -70,7 +71,7 @@ router.patch("/mydemands", requireAuth, (req, res, next) => {
 });
 
 // To update any demand with its ID
-router.patch("/mydemands/:id", requireAuth, (req, res, next) => {
+router.patch("/:id", requireAuth, (req, res, next) => {
   Demand.findByIdAndUpdate(req.params.id, req.body, { new: true })
     .populate("id_user")
     .then((request) => {
