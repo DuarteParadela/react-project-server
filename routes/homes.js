@@ -18,17 +18,6 @@ router.get("/", requireAuth, (req, res, next) => {
 
 // To get a specific home
 
-router.get("/:id", requireAuth, (req, res, next) => {
-  Home.findById(req.params.id)
-    .populate("id_user")
-    .then((homeDoc) => {
-      res.status(200).json(homeDoc);
-    })
-    .catch((error) => {
-      next(error);
-    });
-});
-
 // To create a new home
 router.post("/", requireAuth, (req, res, next) => {
   req.body.id_user = req.session.currentUser;
@@ -66,7 +55,7 @@ router.patch("/myhome", requireAuth, (req, res, next) => {
 });
 
 // To update any home with its ID
-router.patch("/myhome/:id", requireAuth, (req, res, next) => {
+router.patch("/:id", requireAuth, (req, res, next) => {
   Home.findByIdAndUpdate(req.params.id, req.body, { new: true })
     .populate("id_user")
     .then((request) => {
@@ -78,7 +67,7 @@ router.patch("/myhome/:id", requireAuth, (req, res, next) => {
 });
 
 // To delete a home with its ID
-router.delete("/myhome/:id", (req, res, next) => {
+router.delete("/:id", (req, res, next) => {
   Home.findById(req.params.id)
     // .populate("id_user")
     .then((homeDocument) => {
@@ -93,6 +82,17 @@ router.delete("/myhome/:id", (req, res, next) => {
           return res.sendStatus(204);
         })
         .catch(next);
+    })
+    .catch((error) => {
+      next(error);
+    });
+});
+
+router.get("/:id", requireAuth, (req, res, next) => {
+  Home.findById(req.params.id)
+    .populate("id_user")
+    .then((homeDoc) => {
+      res.status(200).json(homeDoc);
     })
     .catch((error) => {
       next(error);

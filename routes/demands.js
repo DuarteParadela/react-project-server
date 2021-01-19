@@ -73,7 +73,6 @@ router.patch("/mydemands", requireAuth, (req, res, next) => {
 // To update any demand with its ID
 router.patch("/:id", requireAuth, (req, res, next) => {
   Demand.findByIdAndUpdate(req.params.id, req.body, { new: true })
-    .populate("id_user")
     .then((request) => {
       return res.status(200).json(request);
     })
