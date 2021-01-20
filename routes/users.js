@@ -4,7 +4,7 @@ const User = require("../models/User");
 const upload = require("../config/cloudinary");
 const requireAuth = require("../middlewares/requireAuth");
 
-// To update profile of the user connected
+// To update the profile of the user connected
 router.patch("/myprofile", (req, res, next) => {
   const userId = req.session.currentUser;
 
@@ -17,7 +17,7 @@ router.patch("/myprofile", (req, res, next) => {
 });
 
 // To update any user with its ID
-router.patch("/myprofile/:id", requireAuth, (req, res, next) => {
+router.patch("/:id", requireAuth, (req, res, next) => {
   User.findByIdAndUpdate(req.params.id, req.body, { new: true })
     .select("-password")
     .then((userDocument) => {
@@ -54,7 +54,7 @@ router.delete("/myprofile/", requireAuth, (req, res, next) => {
 });
 
 // To delete a profile with ID
-router.delete("/myprofile/:id", requireAuth, (req, res, next) => {
+router.delete("/:id", requireAuth, (req, res, next) => {
   User.findById(req.params.id)
     // .populate("id_user")
     .then((userDoc) => {

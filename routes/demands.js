@@ -82,7 +82,7 @@ router.patch("/:id", requireAuth, (req, res, next) => {
 });
 
 // To delete a demand with ID
-router.delete("/mydemands/:id", requireAuth, (req, res, next) => {
+router.delete("/:id", requireAuth, (req, res, next) => {
   Demand.findById(req.params.id)
     // .populate("id_user")
     .then((demandDocument) => {

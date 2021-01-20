@@ -18,7 +18,7 @@ const homeSchema = new Schema({
   acceptsAnimals: Boolean,
   isAvailable: {
     type: Boolean,
-    default: false,
+    default: true,
   },
   size: {
     type: Number,

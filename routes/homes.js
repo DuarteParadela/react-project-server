@@ -16,8 +16,6 @@ router.get("/", requireAuth, (req, res, next) => {
     });
 });
 
-// To get a specific home
-
 // To create a new home
 router.post("/", requireAuth, (req, res, next) => {
   req.body.id_user = req.session.currentUser;
@@ -31,19 +29,25 @@ router.post("/", requireAuth, (req, res, next) => {
 });
 
 // To get the home(s) of the user connected
-router.get("/myhome", requireAuth, (req, res, next) => {
-  Home.find({ id_user: req.session.currentUser })
-    // .populate("id_user")
-    .then((request) => {
-      res.status(200).json(request);
-    })
-    .catch((error) => {
-      next(error);
-    });
+router.get("/myhomes", requireAuth, (req, res, next) => {
+  const currentUserId = req.session.currentUser;
+  if (currentUserId) {
+    Home.find({ id_user: currentUserId })
+      .then((request) => {
+        res.status(200).json(request);
+      })
+      .catch((error) => {
+        console.log(error);
+        next(error);
+      });
+  } else {
+    console.log("Unauthorized");
+    res.status(401).json({ message: "Unauthorized" });
+  }
 });
 
 // To update the home of the user connected
-router.patch("/myhome", requireAuth, (req, res, next) => {
+router.patch("/myhomes", requireAuth, (req, res, next) => {
   Home.find({ id_user: req.session.currentUser })
     // .populate("id_user")
     .then((request) => {
@@ -88,6 +92,7 @@ router.delete("/:id", (req, res, next) => {
     });
 });
 
+// To get a specific home
 router.get("/:id", requireAuth, (req, res, next) => {
   Home.findById(req.params.id)
     .populate("id_user")
