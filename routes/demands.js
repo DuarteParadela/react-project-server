@@ -9,6 +9,7 @@ const protectAdminRoute = require("../middlewares/protectAdminRoute");
 router.get("/", requireAuth, (req, res, next) => {
   Demand.find()
     .populate("id_user")
+    .populate("id_home")
     .then((request) => {
       res.status(200).json(request);
     })

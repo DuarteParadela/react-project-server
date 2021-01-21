@@ -77,4 +77,15 @@ router.delete("/:id", requireAuth, (req, res, next) => {
     });
 });
 
+router.get("/:id", requireAuth, (req, res, next) => {
+  Demand.findById(req.params.id)
+    .populate("id_user")
+    .then((request) => {
+      res.status(200).json(request);
+    })
+    .catch((error) => {
+      next(error);
+    });
+});
+
 module.exports = router;
