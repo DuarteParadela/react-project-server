@@ -9,7 +9,12 @@ const protectAdminRoute = require("../middlewares/protectAdminRoute");
 router.get("/", requireAuth, (req, res, next) => {
   Demand.find()
     .populate("id_user")
-    .populate("id_home")
+    .populate({
+      path: "id_home",
+      populate: {
+        path: "id_user",
+      },
+    })
     .then((request) => {
       res.status(200).json(request);
     })
@@ -35,6 +40,7 @@ router.get("/mydemands", requireAuth, (req, res, next) => {
   const currentUserId = req.session.currentUser;
   if (currentUserId) {
     Demand.find({ id_user: currentUserId })
+      .populate("id_user id_home")
       .then((request) => {
         res.status(200).json(request);
       })
